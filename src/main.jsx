@@ -1,4 +1,3 @@
-import {StrictMode} from "react";
 import {createRoot} from "react-dom/client";
 import theme from "./utils/theme.js";
 import {Experimental_CssVarsProvider as CssVarsProvider} from "@mui/material/styles";

@@ -14,14 +14,17 @@ import {
    Divider,
 } from "@mui/material";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
-import {useSnackbar} from "notistack";
+import {ToastContainer, toast, Bounce} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Cookies from "js-cookie";
 import validator from "validator";
-
+import axiosInstance from "../apis";
+import {useNavigate} from "react-router-dom";
 function LoginPage() {
+   const navigate = useNavigate();
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [showPassword, setShowPassword] = useState(false);
-   const {enqueueSnackbar} = useSnackbar();
 
    const handleClickShowPassword = () => {
       setShowPassword(!showPassword);
@@ -37,50 +40,92 @@ function LoginPage() {
 
    const handleLogin = async (event) => {
       event.preventDefault();
-
       if (!email || !password) {
-         enqueueSnackbar("Email and password is required!", {
-            variant: "error",
+         toast.warn("Email and password are required!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+            transition: Bounce,
          });
          return;
       }
-
-      if (validator.isEmail(email)) {
-         enqueueSnackbar("Email is not in correct format!", {variant: "error"});
-         return;
-      }
-
-      if (password.length < 6) {
-         enqueueSnackbar("Password must be at least 6 characters!", {
-            variant: "error",
+      if (!validator.isEmail(email)) {
+         toast.warn("Email is not in correct format!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+            transition: Bounce,
          });
          return;
       }
-
+      if (password.length < 4) {
+         toast.warn("Password must be at least 4 characters long!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+            transition: Bounce,
+         });
+         return;
+      }
       try {
-         //call api
-         if (response.ok) {
-            enqueueSnackbar("Login successful!", {variant: "success"});
+         const response = await axiosInstance.post("/users/login", {email, password});
+         if (response.status === 200 || response.status === 201) {
+            const {accessToken, refreshToken, user} = response.data;
+            Cookies.set("accessToken", accessToken, {expires: 1});
+            Cookies.set("refreshToken", refreshToken, {expires: 100});
+            Cookies.set("user", JSON.stringify(user), {expires: 100});
+            navigate("/");
+            window.location.reload();
          } else {
-            enqueueSnackbar("Incorrect email or password!!", {
-               variant: "error",
+            toast.error("Incorrect email or password!", {
+               position: "top-right",
+               autoClose: 5000,
+               hideProgressBar: false,
+               closeOnClick: true,
+               pauseOnHover: true,
+               draggable: true,
+               progress: undefined,
+               theme: "dark",
+               transition: Bounce,
             });
          }
       } catch (error) {
-         enqueueSnackbar("Connection error! Please try again.", {
-            variant: "error",
+         toast.error("Incorrect email or password!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+            transition: Bounce,
          });
       }
    };
-
    return (
       <div
          style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            height: "100vh",
-            backgroundColor: "#33415c",
+            height: "90vh",
+            backgroundColor: "#222636",
          }}>
          <Card
             style={{
@@ -88,7 +133,6 @@ function LoginPage() {
                height: "600px",
                backgroundColor: "#292F42",
                borderRadius: "30px",
-               // color: "black",
             }}>
             <Grid container spacing={0} style={{height: "100%"}}>
                <Grid item xs={5}>
@@ -128,14 +172,9 @@ function LoginPage() {
                                  fullWidth
                                  variant='outlined'
                                  placeholder='Email Address'
-                                 // sx={{
-                                 //   "& label": { color: "#1b4332" },
-                                 // }}
                                  InputProps={{
                                     style: {
-                                       // backgroundColor: "#7F889F",
                                        backgroundColor: "#778da9",
-                                       // color: "#1b4332",
                                        borderRadius: "10px",
                                     },
                                  }}
@@ -152,13 +191,9 @@ function LoginPage() {
                                  variant='outlined'
                                  type={showPassword ? "text" : "password"}
                                  placeholder='Password'
-                                 // sx={{
-                                 //   "& label": { color: "#1b4332" },
-                                 // }}
                                  InputProps={{
                                     style: {
                                        backgroundColor: "#778da9",
-                                       // color: "white",
                                        borderRadius: "10px",
                                     },
                                     endAdornment: (
@@ -175,13 +210,6 @@ function LoginPage() {
                                  onChange={(e) => setPassword(e.target.value)}
                               />
                            </div>
-
-                           <FormControlLabel
-                              control={<Checkbox color='primary' />}
-                              label='Remember me'
-                              style={{marginBottom: "10px"}}
-                           />
-
                            <Button
                               type='submit'
                               variant='contained'
@@ -192,6 +220,7 @@ function LoginPage() {
                                  color: "#fff",
                                  borderRadius: "10px",
                                  minHeight: "40px",
+                                 marginTop: "10px",
                               }}>
                               Login
                            </Button>
@@ -210,7 +239,6 @@ function LoginPage() {
 
                            <Typography
                               variant='overline'
-                              // align="center"
                               display='flex'
                               justifyContent='center'
                               style={{
